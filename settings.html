@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings</title>
+  <style>
+/* Notification Box */
+#notification {
+  display: none;
+  position: fixed;
+  top: 50%; /* Position from the top */
+  left: 50%; /* Position from the left */
+  transform: translate(-50%, -50%); /* Adjust the position to center it */
+  padding: 10px 20px;
+  background-color: #bd2626; /* Red background for error */
+  color: #fff;
+  border: 1px solid #ff0000;
+  border-radius: 5px;
+  font-size: 14px;
+  opacity: 1;
+  transition: opacity 1s ease-out;
+  z-index: 1000;
+}
+
+
+
+    body { font-family: Arial, sans-serif; background-color: #f9f9f9; margin: 0; padding: 0; }
+    .container { width: 90%; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+    h2 { text-align: center; }
+    .form-group { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+    .min{ display: flex; margin-left: 6.5rem; margin-top: 1rem; position: absolute; color: rgb(109, 107, 107); }
+    label { flex: 1; font-weight: bold; }
+    input { flex: 2; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    button { display: block; width: 100%; padding: 10px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+    button:disabled { background-color: #ccc; cursor: not-allowed; }
+header {
+  text-align: center;
+  padding: 1rem 0;
+  background-color: #b3e6b5;
+  border-radius: 8px;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  color: #2d752b;
+}   
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+      <h1>Automated Irrigation System (Settings)</h1>
+     </header>
+     
+  <div class="form-group" style="display: none;">
+  <label for="calibration">Sensor Calibration</label>
+  <input type="number" id="calibration" placeholder="Enter calibration value">
+  </div>
+
+  <div class="min">Enter Min Moisture(0-100)</div>
+
+<br><br>
+  <div class="form-group">
+    <label for="maxp1">FARM (ID 1)</label>
+    <input type="number" id="maxp1" placeholder="Enter Min Moisture(0-100)">
+  </div>
+  <div class="form-group">
+    <label for="maxp2">FARM (ID 2)</label>
+    <input type="number" id="maxp2" placeholder="Enter Min Moisture(0-100)">
+  </div>
+
+  <button id="updateButton" onclick="updateSettings()">Update Settings</button><br>
+  <button id="link" class="link"  onclick="openDashboard()">View Dashboard</button>
+
+</div>
+
+<div id="notification"></div>
+
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+    function showNotification(message) {
+  const notification = document.getElementById("notification");
+  notification.innerText = message;
+  notification.style.display = "block";
+  notification.style.opacity = "1";
+
+  // Fade out after 3 seconds
+  setTimeout(() => {
+    notification.style.opacity = "0";
+    setTimeout(() => {
+      notification.style.display = "none";
+    }, 1000); // Hide completely after fade-out
+  }, 3000);
+}
+
+
+
+ // Function to open the Dashboard page
+ function openDashboard() {
+    window.location.href = "dashboard.html"; // Replace "settings.html" with the actual path if different
+  }
+
+  // Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+  authDomain: "project-iot-51262.firebaseapp.com",
+  databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+  projectId: "project-iot-51262",
+  storageBucket: "project-iot-51262.appspot.com",
+  messagingSenderId: "785303672386",
+  appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+  };
+
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  // Fetch settings data from Firebase
+  function fetchSettings() {
+    firebase.database().ref('uniib_elect/smart_farm_monitor').once('value', (snapshot) => {
+      const data = snapshot.val();
+      document.getElementById('calibration').value = data.calibration || 0;
+      document.getElementById('maxp1').value = data.moisture1 || 0;
+      document.getElementById('maxp2').value = data.moisture2 || 0;
+    });
+  }
+
+
+  // Update settings in Firebase
+  function updateSettings() {
+    const calibration = parseFloat(document.getElementById('calibration').value);
+    const moisture1 = parseFloat(document.getElementById('maxp1').value);
+    const moisture2 = parseFloat(document.getElementById('maxp2').value);
+    const settings = 1;
+    firebase.database().ref('uniib_elect/smart_farm_monitor').update({
+      calibration,
+      moisture1,
+      moisture2,
+      settings
+    }).then(() => {
+        showNotification("Settings updated successfully!");
+    }).catch((error) => {
+      console.error("Error updating settings:", error);
+    });
+  }
+
+  // Initial fetch of settings data
+  fetchSettings();
+</script>
+
+</body>
+</html>

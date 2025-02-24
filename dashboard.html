@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farm Monitoring Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f9f9f9; }
+    .container { width: 90%; margin: 0 auto; padding: 20px; }
+    h2 { text-align: center; }
+    .socket { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: #fff; margin: 10px 0; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+    .details { background: #e6f7ff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); font-weight: bold; color: #005073; }
+    .status { font-weight: bold; }
+    button { padding: 8px 12px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    button.off { background-color: #dc3545; }
+    .link-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+    .link { padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 4px; text-align: center; cursor: pointer; }
+    header { text-align: center; padding: 1rem 0; background-color: #b3e6b5; border-radius: 8px; }
+    header h1 { font-size: 1.5rem; color: #2d752b; }
+    #battery { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+   <header>
+      <h1>Automated Irrigation System Dashboard</h1>
+    </header>
+  <div class="link-container">
+    <button class="link" onclick="openSettings()">Change Settings</button>
+    <button class="link" onclick="openLogs()">View Logs</button>
+  </div>
+
+  <div class="details">
+    <p>INTERNAL TEMPERATURE(C): <span id="intTemp"></span></p>
+    <p>EXTERNAL TEMPERATURE(C): <span id="extTemp"></span></p>
+    <p>INTERNAL HUMIDITY(%): <span id="intHumi"></span></p>
+    <p>EXTERNAL HUMIDITY(%): <span id="extHumi"></span></p>
+    <p id="battery">BATTERY PERCENTAGE(%): <span id="battery"></span></p>
+    <p>RUNTIME: <span id="runtime"></span></p>
+  </div>
+
+  <div id="sockets"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+    authDomain: "project-iot-51262.firebaseapp.com",
+    databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+    projectId: "project-iot-51262",
+    storageBucket: "project-iot-51262.appspot.com",
+    messagingSenderId: "785303672386",
+    appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
+  function fetchData() {
+    firebase.database().ref('uniib_elect/smart_farm_monitor').on('value', (snapshot) => {
+      const data = snapshot.val();
+      document.getElementById('intTemp').textContent = data.inttemp;
+      document.getElementById('extTemp').textContent = data.exttemp;
+      document.getElementById('intHumi').textContent = data.inthumi;
+      document.getElementById('extHumi').textContent = data.exthumi;
+      document.getElementById('battery').textContent = data.percentage;
+      document.getElementById('runtime').textContent = convertToTimeFormat(data.runtime);
+      
+      document.getElementById('sockets').innerHTML = "";
+      for (let i = 1; i <= 2; i++) {
+        createSocketElement(i, data[`moisture${i}`], data[`status${i}`]);
+      }
+    });
+  }
+
+  function createSocketElement(socketNumber, moisture, status) {
+    const socketDiv = document.createElement('div');
+    socketDiv.className = 'socket';
+    socketDiv.innerHTML = `
+      <div class="detailss">
+        <p> FARM ID: ${socketNumber}</p>
+        <p>MOISTURE: ${moisture} %</p>
+        <p class="status">Status: <span id="status${socketNumber}">${status ? 'On' : 'Off'}</span></p>
+      </div>
+      <button id="toggleButton${socketNumber}" class="${status ? 'off' : ''}" onclick="toggleSocket(${socketNumber}, ${status ? 0 : 1})">
+        ${status ? 'Turn Off' : 'Turn On'}
+      </button>
+    `;
+    document.getElementById('sockets').appendChild(socketDiv);
+  }
+
+  function convertToTimeFormat(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  }
+
+  function openSettings() {
+    window.location.href = "settings.html";
+  }
+
+  function openLogs() {
+    window.location.href = "logs.html";
+  }
+
+  fetchData();
+</script>
+
+</body>
+</html>

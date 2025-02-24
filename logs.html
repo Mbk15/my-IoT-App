@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Farm Monitor</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        text-decoration: none;
+        background-color: #e8f5e9; /* Light green background */
+    }
+
+    *{
+        text-decoration: none;
+    }
+
+    .header {
+        background-color: #4CAF50; /* Green header */
+        color: white;
+        text-align: center;
+        padding: 15px;
+        font-size: 24px;
+    }
+
+    .info-section {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        padding: 10px;
+        background-color: #f1f8e9;
+        border-bottom: 2px solid #4CAF50;
+    }
+
+    .info-card {
+        flex: 1 1 45%;
+        background-color: #ffffff;
+        margin: 10px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .info-card h3 {
+        color: #4CAF50;
+        margin-bottom: 10px;
+    }
+
+    .table-container {
+        width: 80%;
+        text-align: center;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        align-items: center;
+        justify-content: center;
+       
+    }
+
+    ::-webkit-scrollbar{
+        outline: none;
+    }
+
+    table {
+        width: 100%;
+        margin: 0 auto;
+        border-collapse: collapse;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        font-size: 14px;
+        text-align: center;
+        width: 5rem;
+    }
+
+    button{        
+        width: 80%;
+        display: block; 
+        padding: 10px;
+        align-items: center;
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        border-radius:4px;
+        font-size: 16px;
+        cursor: pointer; 
+        justify-content: center;
+        text-decoration: none;
+        margin: 0 auto;
+    }
+
+    th {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    h3{
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        margin-top: 1.5rem;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+
+    tr:hover {
+        background-color: #f1f1f1;
+    }
+
+    @media (max-width: 768px) {
+        .info-card {
+            flex: 1 1 100%;
+        }
+
+        th, td {
+            font-size: 12px;
+        }
+    }
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+
+    <div class="header">Automated Irrigation System Logs</div> 
+
+    <!-- Info Section -->
+    <div class="info-section">
+        <div class="info-card">
+            <h3>Farm - Internal Readings</h3>
+            <p>Temperature: <span id="farm1-int-temp">37.02</span> °C</p>
+            <p>Humidity: <span id="farm1-int-humidity">74.23</span>%</p>
+        </div>
+        <div class="info-card">
+            <h3>Farm - External Readings </h3>
+            <p>Temperature: <span id="farm1-ext-temp">43.03</span> °C</p>
+            <p>Humidity: <span id="farm1-ext-humidity">54.33</span>%</p>
+        </div>
+
+    </div>
+
+    <!-- Log Data Table -->
+
+    <h3>Farm Moisture and Pump Logs</h3>
+
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Farm</th>
+                    <th>Date</th>
+                    <th>Moisture (%)</th>
+                    <th>IntTemp (C)</th>
+                    <th>ExtTemp (C)</th>
+                    <th>IntHumi (%)</th>
+                    <th>ExtHumi (%)</th>
+                    <th>Pump Status</th>
+                </tr>
+            </thead>
+            <tbody id="data-table"></tbody>
+        </table>
+    </div>
+
+    
+    <a href="dashboard.html">
+
+        <button id="link" class="link">
+
+            View Dashboard
+    
+        </button>
+
+    </a>
+
+
+<script>
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyAmhaIhOWWlPYceSdtJScVIIuZP0Rb71hM",
+        authDomain: "project-iot-51262.firebaseapp.com",
+        databaseURL: "https://project-iot-51262-default-rtdb.firebaseio.com",
+        projectId: "project-iot-51262",
+        storageBucket: "project-iot-51262.appspot.com",
+        messagingSenderId: "785303672386",
+        appId: "1:785303672386:web:8fb1aaac3c34e72e87bfdb"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    function fetchData() {
+        const path = '/uniib_elect/smart_farm_monitor/logs';
+        database.ref(path).on('value', snapshot => {
+            const data = snapshot.val();
+            const tableBody = document.getElementById('data-table');
+            tableBody.innerHTML = ''; // Clear table
+
+            if (data) {
+                Object.entries(data).forEach(([key, entry]) => {
+                    const pumpStatus = entry.pump === 1 ? 'ON' : 'OFF';
+                    tableBody.innerHTML += `
+                        <tr>
+                            <td>${entry.farm}</td>
+                            <td>${entry.date || '--'}</td>
+                            <td>${entry.moisture || '--'}</td>
+                            <td>${entry.intTemp || '--'}</td>
+                            <td>${entry.ExtTemp || '--'}</td>
+                            <td>${entry.IntHumi || '--'}</td>
+                            <td>${entry.ExtHumi || '--'}</td>
+                            <td>${pumpStatus}</td>
+                        </tr>
+                    `;
+                });
+            }
+        });
+
+        // Fetch Temperature and Humidity for each farm
+        database.ref('/uniib_elect/smart_farm_monitor/').on('value', snapshot => {
+            const data = snapshot.val();
+
+            document.getElementById('farm1-int-temp').textContent = data?.inttemp;
+            document.getElementById('farm1-int-humidity').textContent = data?.inthumi || '--';
+            document.getElementById('farm1-ext-temp').textContent = data?.exttemp || '--';
+            document.getElementById('farm1-ext-humidity').textContent = data?.exthumi || '--';
+        });
+
+
+    }
+
+    // Call fetchData on page load
+    fetchData();
+</script>
+</body>
+</html>
