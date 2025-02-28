@@ -161,14 +161,16 @@
         <table>
             <thead>
                 <tr>
-                    <th>Farm</th>
+                    <th>Device ID</th>
                     <th>Date</th>
-                    <th>Moisture (%)</th>
+                    <th>Moisture1 (%)</th>
+                    <th>Moisture2 (%)</th>
                     <th>IntTemp (C)</th>
                     <th>ExtTemp (C)</th>
                     <th>IntHumi (%)</th>
                     <th>ExtHumi (%)</th>
-                    <th>Pump Status</th>
+                    <th>Pump 1 Status</th>
+                    <th>Pump 2 Status</th>
                 </tr>
             </thead>
             <tbody id="data-table"></tbody>
@@ -203,6 +205,14 @@
     const app = firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+
+    function formatTimestamp(timestamp) {
+    if (!timestamp || timestamp.length !== 14) return 'N/A'; 
+    return `${timestamp.substring(0,4)}-${timestamp.substring(4,6)}-${timestamp.substring(6,8)} ` +
+           `${timestamp.substring(8,10)}:${timestamp.substring(10,12)}:${timestamp.substring(12,14)}`;
+}
+
+
     function fetchData() {
         const path = '/uniib_elect/smart_farm_monitor/logs';
         database.ref(path).on('value', snapshot => {
@@ -211,18 +221,23 @@
             tableBody.innerHTML = ''; // Clear table
 
             if (data) {
+
                 Object.entries(data).forEach(([key, entry]) => {
-                    const pumpStatus = entry.pump === 1 ? 'ON' : 'OFF';
+                    const formattedTime = formatTimestamp(entry.datetimestamp); // Format datetime
+                    const pumpStatus1 = entry.status1 === 1 ? 'ON' : 'OFF';
+                    const pumpStatus2 = entry.status2 === 1 ? 'ON' : 'OFF';
                     tableBody.innerHTML += `
                         <tr>
-                            <td>${entry.farm}</td>
-                            <td>${entry.date || '--'}</td>
-                            <td>${entry.moisture || '--'}</td>
-                            <td>${entry.intTemp || '--'}</td>
-                            <td>${entry.ExtTemp || '--'}</td>
-                            <td>${entry.IntHumi || '--'}</td>
-                            <td>${entry.ExtHumi || '--'}</td>
-                            <td>${pumpStatus}</td>
+                            <td>Device001</td>
+                            <td>${formattedTime}</td>
+                            <td>${entry.moisture1 || '--'}</td>
+                            <td>${entry.moisture2 || '--'}</td>
+                            <td>${entry.inttemp || '--'}</td>
+                            <td>${entry.exttemp || '--'}</td>
+                            <td>${entry.inthumi || '--'}</td>
+                            <td>${entry.exthumi || '--'}</td>
+                            <td>${pumpStatus1}</td>
+                            <td>${pumpStatus2}</td>
                         </tr>
                     `;
                 });
@@ -241,6 +256,38 @@
 
 
     }
+
+
+
+//     if (data) {
+//     // Convert object to array and sort by datetimestamp (descending)
+//     const sortedEntries = Object.entries(data)
+//         .sort(([, a], [, b]) => b.datetimestamp - a.datetimestamp); // Sort descending
+
+//     // Generate table rows in one go
+//     tableBody.innerHTML = sortedEntries.map(([key, entry]) => {
+//         const formattedTime = formatTimestamp(entry.datetimestamp);
+//         const pumpStatus1 = entry.status1 === 1 ? 'ON' : 'OFF';
+//         const pumpStatus2 = entry.status2 === 1 ? 'ON' : 'OFF';
+
+//         return `
+//             <tr>
+//                 <td>Device001</td>
+//                 <td>${formattedTime}</td>
+//                 <td>${entry.moisture1 || '--'}</td>
+//                 <td>${entry.moisture2 || '--'}</td>
+//                 <td>${entry.inttemp || '--'}</td>
+//                 <td>${entry.exttemp || '--'}</td>
+//                 <td>${entry.inthumi || '--'}</td>
+//                 <td>${entry.exthumi || '--'}</td>
+//                 <td>${pumpStatus1}</td>
+//                 <td>${pumpStatus2}</td>
+//             </tr>
+//         `;
+//     }).join(''); // Efficiently update the table
+// }
+
+
 
     // Call fetchData on page load
     fetchData();

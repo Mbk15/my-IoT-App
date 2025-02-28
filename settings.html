@@ -122,11 +122,11 @@ header h1 {
 
   // Fetch settings data from Firebase
   function fetchSettings() {
-    firebase.database().ref('uniib_elect/smart_farm_monitor').once('value', (snapshot) => {
+    firebase.database().ref('uniib_elect/smart_farm_monitor/esp').once('value', (snapshot) => {
       const data = snapshot.val();
       document.getElementById('calibration').value = data.calibration || 0;
-      document.getElementById('maxp1').value = data.moisture1 || 0;
-      document.getElementById('maxp2').value = data.moisture2 || 0;
+      document.getElementById('maxp1').value = data.max_moisture1 || 0;
+      document.getElementById('maxp2').value = data.max_moisture2 || 0;
     });
   }
 
@@ -134,13 +134,13 @@ header h1 {
   // Update settings in Firebase
   function updateSettings() {
     const calibration = parseFloat(document.getElementById('calibration').value);
-    const moisture1 = parseFloat(document.getElementById('maxp1').value);
-    const moisture2 = parseFloat(document.getElementById('maxp2').value);
+    const max_moisture1 = parseFloat(document.getElementById('maxp1').value);
+    const max_moisture2 = parseFloat(document.getElementById('maxp2').value);
     const settings = 1;
-    firebase.database().ref('uniib_elect/smart_farm_monitor').update({
+    firebase.database().ref('uniib_elect/smart_farm_monitor/esp').update({
       calibration,
-      moisture1,
-      moisture2,
+      max_moisture1,
+      max_moisture2,
       settings
     }).then(() => {
         showNotification("Settings updated successfully!");
